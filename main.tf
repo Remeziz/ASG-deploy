@@ -46,13 +46,10 @@ module "my_host" {
 
 module "asg" {
   source            = "./modules/asg"
+  
   min_size          = 1
   max_size          = 3
   desired_capacity  = 2
-
   health_check_grace_period = 300
 
-  target_group_arns = [
-    module.alb.target_group_arn
-  ]
 }

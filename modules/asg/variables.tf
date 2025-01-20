@@ -27,18 +27,11 @@ variable "instance_profile" {
   default = null
 }
 
-variable "security_group_id" {
-  type = string
-}
 
 variable "default_subnet" {
   default = "subnet-0c5ead20fa23df89b"
 }
 
-variable "ami_id" {
-  type        = string
-  description = "ID AMI для EC2"
-}
 
 variable "instance_type" {
   type        = string
