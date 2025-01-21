@@ -29,9 +29,17 @@ jobs:
         run: aws autoscaling describe-auto-scaling-groups
 
       - name: Update ASG desired capacity
-        if: contains(steps.list-asgs.outputs.stdout, 'example-asg')
-        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --desired-capacity 1
+        run: |
+          if aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names example-asg; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --desired-capacity 1
+          else
+            echo "ASG example-asg not found"
+          fi
 
       - name: Update ASG2 desired capacity
-        if: contains(steps.list-asgs.outputs.stdout, 'example-asg2')
-        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --desired-capacity 1
+        run: |
+          if aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names example-asg2; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --desired-capacity 1
+          else
+            echo "ASG example-asg2 not found"
+          fi
