@@ -25,9 +25,13 @@ jobs:
           aws-region: us-west-2
 
       - name: List Auto Scaling Groups
+        id: list-asgs
         run: aws autoscaling describe-auto-scaling-groups
 
       - name: Update ASG minimum capacity
-        run: |
-          aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --min-size 1
-          aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --min-size 1
+        if: contains(steps.list-asgs.outputs.stdout, 'example-asg')
+        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --min-size 1
+
+      - name: Update ASG2 minimum capacity
+        if: contains(steps.list-asgs.outputs.stdout, 'example-asg2')
+        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --min-size 1
