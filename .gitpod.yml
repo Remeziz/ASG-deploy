@@ -1,6 +1,0 @@
-image:
-  file: .gitpod.dockerfile
-
-tasks:
-  - name: Check Terraform
-    command: terraform --version
