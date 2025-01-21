@@ -12,6 +12,24 @@ resource "aws_subnet" "main" {
   availability_zone = "us-west-2a"
 }
 
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_route_table" "main" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+}
+
+resource "aws_route_table_association" "main" {
+  subnet_id      = aws_subnet.main.id
+  route_table_id = aws_route_table.main.id
+}
+
 resource "aws_security_group" "elb" {
   vpc_id = aws_vpc.main.id
 
@@ -48,23 +66,28 @@ resource "aws_security_group" "asg" {
   }
 }
 
-resource "aws_launch_configuration" "asg" {
-  name          = "example-launch-configuration"
-  image_id      = "ami-0c55b159cbfafe1f0"
-  instance_type = "t2.micro"
-  security_groups = [aws_security_group.asg.id]
 
-  lifecycle {
-    create_before_destroy = true
-  }
+resource "aws_launch_template" "asg" {
+  name          = "example-launch-template"
+  image_id      = "ami-063d405eaa926874b"
+  instance_type = "t4g.micro"
+}
+
+resource "aws_launch_template" "asg2" {
+  name          = "example-launch-template-2"
+  image_id      = "ami-063d405eaa926874b"
+  instance_type = "t4g.micro"
 }
 
 resource "aws_autoscaling_group" "asg" {
   desired_capacity     = 1
   max_size             = 1
-  min_size             = 1
+  min_size             = 0
   vpc_zone_identifier  = [aws_subnet.main.id]
-  launch_configuration = aws_launch_configuration.asg.id
+  launch_template {
+    id      = aws_launch_template.asg.id
+    version = "$Latest"
+  }
 
   tag {
     key                 = "Name"
@@ -73,10 +96,27 @@ resource "aws_autoscaling_group" "asg" {
   }
 }
 
+resource "aws_autoscaling_group" "asg2" {
+  desired_capacity     = 1
+  max_size             = 1
+  min_size             = 0
+  vpc_zone_identifier  = [aws_subnet.main.id]
+  launch_template {
+    id      = aws_launch_template.asg2.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "example-asg-instance-2"
+    propagate_at_launch = true
+  }
+}
+
 resource "aws_elb" "main" {
   name               = "example-elb"
-  availability_zones = ["us-west-2a"]
   security_groups    = [aws_security_group.elb.id]
+  subnets            = [aws_subnet.main.id]  # Ensure the ELB is in the correct subnet
 
   listener {
     instance_port     = 80
@@ -93,5 +133,40 @@ resource "aws_elb" "main" {
     unhealthy_threshold = 2
   }
 
-  instances = [aws_autoscaling_group.asg.id]
+  # Remove the instances attribute
+  # instances = [aws_autoscaling_group.asg.id]
+}
+
+resource "aws_elb" "main2" {
+  name               = "example-elb-2"
+  security_groups    = [aws_security_group.elb.id]
+  subnets            = [aws_subnet.main.id]  # Ensure the ELB is in the correct subnet
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "HTTP"
+    lb_port           = 80
+    lb_protocol       = "HTTP"
+  }
+
+  health_check {
+    target              = "HTTP:80/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  # Remove the instances attribute
+  # instances = [aws_autoscaling_group.asg2.id]
+}
+
+resource "aws_autoscaling_attachment" "asg_attachment" {
+  autoscaling_group_name = aws_autoscaling_group.asg.name
+  elb                    = aws_elb.main.name
+}
+
+resource "aws_autoscaling_attachment" "asg_attachment2" {
+  autoscaling_group_name = aws_autoscaling_group.asg2.name
+  elb                    = aws_elb.main2.name
 }
