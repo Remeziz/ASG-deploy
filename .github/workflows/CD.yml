@@ -24,6 +24,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
+      - name: List Auto Scaling Groups
+        run: aws autoscaling describe-auto-scaling-groups
+
       - name: Update ASG minimum capacity
         run: |
           aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --min-size 1
