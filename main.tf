@@ -80,7 +80,7 @@ resource "aws_launch_template" "asg2" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  desired_capacity     = 1
+  desired_capacity     = 0
   max_size             = 1
   min_size             = 0
   vpc_zone_identifier  = [aws_subnet.main.id]
@@ -97,7 +97,7 @@ resource "aws_autoscaling_group" "asg" {
 }
 
 resource "aws_autoscaling_group" "asg2" {
-  desired_capacity     = 1
+  desired_capacity     = 0
   max_size             = 1
   min_size             = 0
   vpc_zone_identifier  = [aws_subnet.main.id]

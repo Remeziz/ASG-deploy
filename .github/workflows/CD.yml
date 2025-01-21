@@ -28,10 +28,10 @@ jobs:
         id: list-asgs
         run: aws autoscaling describe-auto-scaling-groups
 
-      - name: Update ASG minimum capacity
+      - name: Update ASG desired capacity
         if: contains(steps.list-asgs.outputs.stdout, 'example-asg')
-        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --min-size 1
+        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg --desired-capacity 1
 
-      - name: Update ASG2 minimum capacity
+      - name: Update ASG2 desired capacity
         if: contains(steps.list-asgs.outputs.stdout, 'example-asg2')
-        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --min-size 1
+        run: aws autoscaling update-auto-scaling-group --auto-scaling-group-name example-asg2 --desired-capacity 1
