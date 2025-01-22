@@ -38,17 +38,17 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Get Terraform Output
-        id: get-output
+      - name: Get ASG Names
+        id: get-asg-names
         run: |
-          asg_names=$(terraform output -json asg_names | jq -r '.[]' | tr -d '\r')
+          asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[]' | tr -d '\r')
           echo "asg_names=${asg_names}" >> $GITHUB_ENV
         shell: bash
         
       - name: Process ASG Names
         run: |
           asg_names="${{ env.asg_names }}"
-          IFS=$'\n' read -r -d '' -a asg_names_array <<< "$asg_names"
+          IFS=$'\n' read -r -a asg_names_array <<< "$asg_names"
           echo "ASG Names: ${asg_names_array[@]}"
         
   update-asg:
@@ -70,7 +70,7 @@ jobs:
         run: |
           DESIRED_CAPACITY=1
           asg_names="${{ env.asg_names }}"
-          IFS=$'\n' read -r -d '' -a asg_names_array <<< "$asg_names"
+          IFS=$'\n' read -r -a asg_names_array <<< "$asg_names"
           for asg_name in "${asg_names_array[@]}"; do
             ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
             if [ "$ASG_EXISTS" == "$asg_name" ]; then
