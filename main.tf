@@ -89,10 +89,11 @@ resource "aws_launch_template" "asg2" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  desired_capacity     = 0
-  max_size             = 1
-  min_size             = 0
-  vpc_zone_identifier  = [aws_subnet.main.id]
+  name                = "ter-${substr(data.external.commit_hash.result.hash, 0, 4)}-asg"
+  desired_capacity    = 0
+  max_size            = 1
+  min_size            = 0
+  vpc_zone_identifier = [aws_subnet.main.id]
   launch_template {
     id      = aws_launch_template.asg.id
     version = "$Latest"
@@ -106,10 +107,11 @@ resource "aws_autoscaling_group" "asg" {
 }
 
 resource "aws_autoscaling_group" "asg2" {
-  desired_capacity     = 0
-  max_size             = 1
-  min_size             = 0
-  vpc_zone_identifier  = [aws_subnet.main.id]
+  name                = "ter-${substr(data.external.commit_hash.result.hash, 0, 4)}-asg2"
+  desired_capacity    = 0
+  max_size            = 1
+  min_size            = 0
+  vpc_zone_identifier = [aws_subnet.main.id]
   launch_template {
     id      = aws_launch_template.asg2.id
     version = "$Latest"
@@ -178,5 +180,9 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
 resource "aws_autoscaling_attachment" "asg_attachment2" {
   autoscaling_group_name = aws_autoscaling_group.asg2.name
   elb                    = aws_elb.main2.name
+}
+
+data "external" "commit_hash" {
+  program = ["bash", "-c", "git rev-parse HEAD"]
 }
 
