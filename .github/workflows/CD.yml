@@ -39,14 +39,16 @@ jobs:
         id: get-asg-names
         run: |
           asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[]' | tr -d '\r')
-          echo "asg_names=$asg_names" >> $GITHUB_ENV
+          asg_name_1=$(echo "$asg_names" | sed -n '1p')
+          asg_name_2=$(echo "$asg_names" | sed -n '2p')
+          echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
+          echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
         shell: bash
         
       - name: Process ASG Names
         run: |
-          asg_names="${{ env.asg_names }}"
-          IFS=$'\n' read -r -a asg_names_array <<< "$asg_names"
-          echo "ASG Names: ${asg_names_array[@]}"
+          echo "ASG Name 1: ${{ env.asg_name_1 }}"
+          echo "ASG Name 2: ${{ env.asg_name_2 }}"
         
   update-asg:
     needs: terraform
@@ -66,9 +68,7 @@ jobs:
       - name: Update ASG desired capacity
         run: |
           DESIRED_CAPACITY=1
-          asg_names="${{ env.asg_names }}"
-          IFS=$'\n' read -r -a asg_names_array <<< "$asg_names"
-          for asg_name in "${asg_names_array[@]}"; do
+          for asg_name in "${{ env.asg_name_1 }}" "${{ env.asg_name_2 }}"; do
             ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
             if [ "$ASG_EXISTS" == "$asg_name" ]; then
               aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
