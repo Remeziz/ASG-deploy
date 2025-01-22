@@ -92,13 +92,11 @@ jobs:
           echo "Error: No instance found in ASG $asg_name after multiple attempts"
           exit 1
 
-      - name: Get Private Key
+      - name: Get Private Key from Secrets Manager
         id: ssh_key
         run: |
-          terraform output -raw ssh_private_key > ssh_key.pem
+          aws secretsmanager get-secret-value --secret-id deployer-ssh-key --query SecretString --output text > ssh_key.pem
           chmod 600 ssh_key.pem
-        env:
-          TF_IN_AUTOMATION: true
 
       - name: Check user_data execution
         run: |

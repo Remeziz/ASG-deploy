@@ -16,6 +16,15 @@ resource "tls_private_key" "deployer" {
   algorithm = "ED25519"
 }
 
+resource "aws_secretsmanager_secret" "ssh_key" {
+  name = "deployer-ssh-key"
+}
+
+resource "aws_secretsmanager_secret_version" "ssh_key_version" {
+  secret_id     = aws_secretsmanager_secret.ssh_key.id
+  secret_string = tls_private_key.deployer.private_key_pem
+}
+
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
   public_key = tls_private_key.deployer.public_key_openssh
