@@ -74,6 +74,9 @@ jobs:
             exit 1
           fi
 
+      - name: Wait for ASG1 to stabilize
+        run: sleep 10
+
       - name: Check instance availability
         run: |
           asg_name="${{ env.asg_name_1 }}"
@@ -89,6 +92,14 @@ jobs:
           echo "Error: No instance found in ASG $asg_name after multiple attempts"
           exit 1
 
+      - name: Get Private Key
+        id: ssh_key
+        run: |
+          terraform output -raw ssh_private_key > ssh_key.pem
+          chmod 600 ssh_key.pem
+        env:
+          TF_IN_AUTOMATION: true
+
       - name: Check user_data execution
         run: |
           INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_1 }}" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
@@ -101,14 +112,17 @@ jobs:
             echo "Error: No public IP found for instance $INSTANCE_ID"
             exit 1
           fi
-          echo "${{ steps.apply.outputs.ssh_private_key }}" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
-          if [ $? -ne 0 ]; then
-            echo "Error: user_data did not execute successfully on instance $INSTANCE_ID"
-            exit 1
-          fi
-          echo "user_data executed successfully on instance $INSTANCE_ID"
+          for i in {1..5}; do
+            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+            if [ $? -eq 0 ]; then
+              echo "user_data executed successfully on instance $INSTANCE_ID"
+              exit 0
+            fi
+            echo "SSH connection failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "Error: user_data did not execute successfully on instance $INSTANCE_ID after multiple attempts"
+          exit 1
 
       - name: Update ASG2 desired capacity
         run: |
@@ -125,5 +139,4 @@ jobs:
           else
             echo "ASG $asg_name not found"
             exit 1
-            
           fi
