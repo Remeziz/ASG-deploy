@@ -56,19 +56,57 @@ jobs:
           echo "ASG Name 1: ${{ env.asg_name_1 }}"
           echo "ASG Name 2: ${{ env.asg_name_2 }}"
 
-      - name: Update ASG desired capacity
+      - name: Update ASG1 desired capacity
         run: |
           DESIRED_CAPACITY=1
-          for asg_name in "${{ env.asg_name_1 }}" "${{ env.asg_name_2 }}"; do
-            echo "Updating ASG: $asg_name"
-            if [ -z "$asg_name" ]; then
-              echo "Error: ASG name is empty"
-              exit 1
-            fi
-            ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
-            if [ "$ASG_EXISTS" == "$asg_name" ]; then
-              aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
-            else
-              echo "ASG $asg_name not found"
-            fi
-          done
+          asg_name="${{ env.asg_name_1 }}"
+          echo "Updating ASG: $asg_name"
+          if [ -z "$asg_name" ]; then
+            echo "Error: ASG name is empty"
+            exit 1
+          fi
+          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+          if [ "$ASG_EXISTS" == "$asg_name" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
+          else
+            echo "ASG $asg_name not found"
+            exit 1
+          fi
+
+      - name: Check instance availability
+        run: |
+          asg_name="${{ env.asg_name_1 }}"
+          INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
+          if [ "$INSTANCE_ID" == "None" ]; then
+            echo "Error: No instance found in ASG $asg_name"
+            exit 1
+          fi
+          echo "Instance $INSTANCE_ID is available in ASG $asg_name"
+
+      - name: Check user_data execution
+        run: |
+          INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_1 }}" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
+          INSTANCE_IP=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          ssh -o StrictHostKeyChecking=no ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+          if [ $? -ne 0 ]; then
+            echo "Error: user_data did not execute successfully on instance $INSTANCE_ID"
+            exit 1
+          fi
+          echo "user_data executed successfully on instance $INSTANCE_ID"
+
+      - name: Update ASG2 desired capacity
+        run: |
+          DESIRED_CAPACITY=1
+          asg_name="${{ env.asg_name_2 }}"
+          echo "Updating ASG: $asg_name"
+          if [ -z "$asg_name" ]; then
+            echo "Error: ASG name is empty"
+            exit 1
+          fi
+          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+          if [ "$ASG_EXISTS" == "$asg_name" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
+          else
+            echo "ASG $asg_name not found"
+            exit 1
+          fi
