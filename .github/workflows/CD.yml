@@ -41,6 +41,10 @@ jobs:
           asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[]' | tr -d '\r')
           asg_name_1=$(echo "$asg_names" | sed -n '1p')
           asg_name_2=$(echo "$asg_names" | sed -n '2p')
+          if [ -z "$asg_name_1" ] || [ -z "$asg_name_2" ]; then
+            echo "Error: One or both ASG names are empty"
+            exit 1
+          fi
           echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
           echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
         shell: bash
@@ -69,6 +73,10 @@ jobs:
         run: |
           DESIRED_CAPACITY=1
           asg_name="${{ env.asg_name_1 }}"
+          if [ -z "$asg_name" ]; then
+            echo "Error: ASG name is empty"
+            exit 1
+          fi
           ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
           if [ "$ASG_EXISTS" == "$asg_name" ]; then
             aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
@@ -95,6 +103,10 @@ jobs:
         run: |
           DESIRED_CAPACITY=1
           asg_name="${{ env.asg_name_2 }}"
+          if [ -z "$asg_name" ]; then
+            echo "Error: ASG name is empty"
+            exit 1
+          fi
           ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
           if [ "$ASG_EXISTS" == "$asg_name" ]; then
             aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
