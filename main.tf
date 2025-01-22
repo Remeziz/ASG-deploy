@@ -12,24 +12,6 @@ terraform {
   }
 }
 
-resource "tls_private_key" "deployer" {
-  algorithm = "ED25519"
-}
-
-resource "aws_secretsmanager_secret" "ssh_key" {
-  name = "deployer-ssh-key"
-}
-
-resource "aws_secretsmanager_secret_version" "ssh_key_version" {
-  secret_id     = aws_secretsmanager_secret.ssh_key.id
-  secret_string = tls_private_key.deployer.private_key_pem
-}
-
-resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = tls_private_key.deployer.public_key_openssh
-}
-
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -106,7 +88,7 @@ resource "aws_launch_template" "asg" {
   name          = "example-launch-template"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
-  key_name      = aws_key_pair.deployer.key_name
+  key_name      = "test-ssh" # Use the existing key name
   user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log
@@ -122,7 +104,7 @@ resource "aws_launch_template" "asg2" {
   name          = "example-launch-template-2"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
-  key_name      = aws_key_pair.deployer.key_name
+  key_name      = "test-ssh" # Use the existing key name
   user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log
@@ -226,7 +208,6 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
 resource "aws_autoscaling_attachment" "asg_attachment2" {
   autoscaling_group_name = aws_autoscaling_group.asg2.name
   elb                    = aws_elb.main2.name
-
 }
 
 
