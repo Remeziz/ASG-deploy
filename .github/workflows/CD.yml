@@ -35,6 +35,9 @@ jobs:
       - name: Apply Terraform
         run: terraform apply -auto-approve
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Get Terraform Output
         id: get-output
         run: |
@@ -44,7 +47,8 @@ jobs:
         
       - name: Process ASG Names
         run: |
-          IFS=' ' read -r -a asg_names_array <<< "${{ env.asg_names }}"
+          asg_names="${{ env.asg_names }}"
+          IFS=$'\n' read -r -d '' -a asg_names_array <<< "$asg_names"
           echo "ASG Names: ${asg_names_array[@]}"
         
   update-asg:
@@ -65,7 +69,8 @@ jobs:
       - name: Update ASG desired capacity
         run: |
           DESIRED_CAPACITY=1
-          IFS=' ' read -r -a asg_names_array <<< "${{ env.asg_names }}"
+          asg_names="${{ env.asg_names }}"
+          IFS=$'\n' read -r -d '' -a asg_names_array <<< "$asg_names"
           for asg_name in "${asg_names_array[@]}"; do
             ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
             if [ "$ASG_EXISTS" == "$asg_name" ]; then
