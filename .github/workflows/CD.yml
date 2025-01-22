@@ -13,6 +13,9 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: prod
+    outputs:
+      asg_name_1: ${{ steps.get-asg-names.outputs.asg_name_1 }}
+      asg_name_2: ${{ steps.get-asg-names.outputs.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -47,8 +50,10 @@ jobs:
             echo "Error: One or both ASG names are empty"
             exit 1
           fi
-          echo "{asg_name_1}={$asg_name_1}" >> $GITHUB_OUTPUT
-          echo "{asg_name_2}={$asg_name_2}" >> $GITHUB_OUTPUT
+          echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
+          echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
+          echo "::set-output name=asg_name_1::$asg_name_1"
+          echo "::set-output name=asg_name_2::$asg_name_2"
         shell: bash
         
       - name: Process ASG Names
@@ -60,6 +65,9 @@ jobs:
     needs: terraform
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      asg_name_1: ${{ needs.terraform.outputs.asg_name_1 }}
+      asg_name_2: ${{ needs.terraform.outputs.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -74,7 +82,7 @@ jobs:
       - name: Update ASG desired capacity
         run: |
           DESIRED_CAPACITY=1
-          for asg_name in "${{ needs.terraforma.outputs.asg_name_1 }}" "${{ needs.terraform.outputs.asg_name_2 }}"; do
+          for asg_name in "${{ env.asg_name_1 }}" "${{ env.asg_name_2 }}"; do
             echo "Updating ASG: $asg_name"
             if [ -z "$asg_name" ]; then
               echo "Error: ASG name is empty"
