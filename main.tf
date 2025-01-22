@@ -4,7 +4,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "hillel-devops-terraform-state-2"
+    bucket         = "terraform-state-asg-remeziz"
     key            = "asg/terraform.tfstate"
     region         = "us-west-2"
     dynamodb_table = "terraform_lock"
