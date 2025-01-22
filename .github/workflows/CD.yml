@@ -98,7 +98,8 @@ jobs:
           aws secretsmanager get-secret-value --secret-id ssh-test --query SecretString --output text > ssh_key.pem
           chmod 600 ssh_key.pem
 
-      - name: Check user_data execution
+      - name: Get Instance ID and IP
+        id: instance_info
         run: |
           INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_1 }}" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
           if [ "$INSTANCE_ID" == "None" ]; then
@@ -110,16 +111,21 @@ jobs:
             echo "Error: No public IP found for instance $INSTANCE_ID"
             exit 1
           fi
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+          echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_ENV
+
+      - name: Check user_data execution
+        run: |
           for i in {1..5}; do
-            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'sudo grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@${{ env.INSTANCE_IP }} 'sudo grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
             if [ $? -eq 0 ]; then
-              echo "user_data executed successfully on instance $INSTANCE_ID"
+              echo "user_data executed successfully on instance ${{ env.INSTANCE_ID }}"
               exit 0
             fi
             echo "SSH connection failed, retrying in 10 seconds..."
             sleep 10
           done
-          echo "Error: user_data did not execute successfully on instance $INSTANCE_ID after multiple attempts"
+          echo "Error: user_data did not execute successfully on instance ${{ env.INSTANCE_ID }} after multiple attempts"
           exit 1
 
       - name: Update ASG2 desired capacity
