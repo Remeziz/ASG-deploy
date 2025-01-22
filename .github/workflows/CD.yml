@@ -60,6 +60,8 @@ jobs:
     needs: terraform
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      asg_name_1: ${{ needs.terraform.outputs.asg_name_1 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -91,6 +93,8 @@ jobs:
     needs: terraform
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      asg_name_2: ${{ needs.terraform.outputs.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
