@@ -37,16 +37,19 @@ jobs:
 
       - name: Get Terraform Output
         id: get-output
-        run: echo "asg_names=$(terraform output -json asg_names)" >> $GITHUB_ENV
+        run: |
+          asg_names=$(terraform output -json asg_names | jq -r '. | join(" ")')
+          echo "asg_names=$asg_names" >> $GITHUB_ENV
 
       - name: Process ASG Names
         run: |
           echo "ASG Names: ${{ env.asg_names }}"
-          echo "${{ env.asg_names }}" | jq -c '.[]' | while read -r asg_name; do
+          for asg_name in ${{ env.asg_names }}; do
             echo "Processing ASG: $asg_name"
           done
         
   update-asg:
+    needs: terraform
     runs-on: ubuntu-latest
     environment: prod
     steps:
@@ -62,7 +65,7 @@ jobs:
 
       - name: Update ASG desired capacity
         run: |
-          echo "${{ env.asg_names }}" | jq -c '.[]' | while read -r asg_name; do
+          for asg_name in ${{ env.asg_names }}; do
             DESIRED_CAPACITY=1
             ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
             if [ "$ASG_EXISTS" == "$asg_name" ]; then
