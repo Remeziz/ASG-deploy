@@ -96,7 +96,7 @@ jobs:
             echo "Error: No instance found in ASG $asg_name"
             exit 1
           fi
-          INSTANCE_IP=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          INSTANCE_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
           if [ "$INSTANCE_IP" == "None" ]; then
             echo "Error: No public IP found for instance $INSTANCE_ID"
             exit 1
