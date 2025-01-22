@@ -74,7 +74,7 @@ jobs:
       - name: Update ASG desired capacity
         run: |
           DESIRED_CAPACITY=1
-          for asg_name in "${{ needs.terraforma.outputs.sg_name_1 }}" "${{ needs.terraform.outputs.asg_name_2 }}"; do
+          for asg_name in "${{ needs.terraforma.outputs.asg_name_1 }}" "${{ needs.terraform.outputs.asg_name_2 }}"; do
             echo "Updating ASG: $asg_name"
             if [ -z "$asg_name" ]; then
               echo "Error: ASG name is empty"
