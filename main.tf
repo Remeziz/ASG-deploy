@@ -12,6 +12,11 @@ terraform {
   }
 }
 
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer-key"
+  public_key = file("~/.ssh/id_ed25519.pub")
+}
+
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -80,6 +85,7 @@ resource "aws_launch_template" "asg" {
   name          = "example-launch-template"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
+  key_name      = aws_key_pair.deployer.key_name
   user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log
@@ -91,6 +97,7 @@ resource "aws_launch_template" "asg2" {
   name          = "example-launch-template-2"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
+  key_name      = aws_key_pair.deployer.key_name
   user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log

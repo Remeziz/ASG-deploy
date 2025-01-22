@@ -95,7 +95,7 @@ jobs:
             echo "Error: No private IP found for instance $INSTANCE_ID"
             exit 1
           fi
-          ssh -o StrictHostKeyChecking=no -i /path/to/your/private-key ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
           if [ $? -ne 0 ]; then
             echo "Error: user_data did not execute successfully on instance $INSTANCE_ID"
             exit 1
