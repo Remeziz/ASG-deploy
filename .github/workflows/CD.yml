@@ -35,14 +35,11 @@ jobs:
       - name: Apply Terraform
         run: terraform apply -auto-approve
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
       - name: Get Terraform Output
         id: get-output
         run: |
           asg_names=$(terraform output -json asg_names | jq -r '.[]' | tr -d '\r')
-          echo "asg_names=$asg_names" >> $GITHUB_ENV
+          echo "asg_names=${asg_names}" >> $GITHUB_ENV
         shell: bash
         
       - name: Process ASG Names
