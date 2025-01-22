@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     outputs:
-      asg_name_1: ${{ steps.get-asg-names.outputs.asg_name_1 }}
-      asg_name_2: ${{ steps.get-asg-names.outputs.asg_name_2 }}
+      asg_name_1: ${{ steps.get-asg-names.asg_name_1 }}
+      asg_name_2: ${{ steps.get-asg-names.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
