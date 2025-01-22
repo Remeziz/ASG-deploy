@@ -38,7 +38,7 @@ jobs:
       - name: Get Terraform Output
         id: get-output
         run: |
-          asg_name_1=$(terraform output -raw asg_name_1)
+          asg_name_1=$(terraform output -raw asg_name_1) 
           asg_name_2=$(terraform output -raw asg_name_2)
           echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
           echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
