@@ -27,7 +27,12 @@ resource "aws_secretsmanager_secret_version" "ssh_key_version" {
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = tls_private_key.deployer.public_key_openssh
+  public_key = tls_private_key.algorithm.public_key_openssh
+}
+
+resource "tls_private_key" "algorithm" {
+  algorithm   = "ECDSA"
+  ecdsa_curve = "P256" # Вы можете использовать P256, P384 или P521
 }
 
 resource "aws_vpc" "main" {
