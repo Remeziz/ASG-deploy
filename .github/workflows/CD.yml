@@ -40,7 +40,7 @@ jobs:
         run: |
           raw_asg_names=$(terraform output -json asg_names)
           echo "Raw ASG Names: $raw_asg_names"
-          asg_names=$(echo $raw_asg_names | jq -r '. | join(" ")')
+          asg_names=$(echo "$raw_asg_names" | jq -r '.[] | @sh' | tr -d "'")
           echo "asg_names=$asg_names" >> $GITHUB_ENV
 
       - name: Process ASG Names
