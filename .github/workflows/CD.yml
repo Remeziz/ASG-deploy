@@ -38,17 +38,15 @@ jobs:
       - name: Get Terraform Output
         id: get-output
         run: |
-          raw_asg_names=$(terraform output -json asg_names)
-          echo "Raw ASG Names: $raw_asg_names"
-          asg_names=$(echo "$raw_asg_names" | jq -r '.[]' | tr '\n' ' ')
-          echo "asg_names=$asg_names" >> $GITHUB_ENV
+          asg_name_1=$(terraform output -json asg_name_1)
+          asg_name_2=$(terraform output -json asg_name_2)
+          echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
+          echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
 
       - name: Process ASG Names
         run: |
-          echo "ASG Names: ${{ env.asg_names }}"
-          for asg_name in ${{ env.asg_names }}; do
-            echo "Processing ASG: $asg_name"
-          done
+          echo "ASG Name 1: ${{ env.asg_name_1 }}"
+          echo "ASG Name 2: ${{ env.asg_name_2 }}"
         
   update-asg:
     needs: terraform
@@ -65,14 +63,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      - name: Update ASG desired capacity
+      - name: Update ASG1 desired capacity
         run: |
-          for asg_name in ${{ env.asg_names }}; do
-            DESIRED_CAPACITY=1
-            ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
-            if [ "$ASG_EXISTS" == "$asg_name" ]; then
-              aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
-            else
-              echo "ASG $asg_name not found"
-            fi
-          done
+          DESIRED_CAPACITY=1
+          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_1 }}" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+          if [ "$ASG_EXISTS" == "${{ env.asg_name_1 }}" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "${{ env.asg_name_1 }}" --desired-capacity $DESIRED_CAPACITY
+          else
+            echo "ASG ${{ env.asg_name_1 }} not found"
+          fi
+
+      - name: Update ASG2 desired capacity
+        run: |
+          DESIRED_CAPACITY=1
+          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_2 }}" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+          if [ "$ASG_EXISTS" == "${{ env.asg_name_2 }}" ]; then
+            aws autoscaling update-auto-scaling-group --auto-scaling-group-name "${{ env.asg_name_2 }}" --desired-capacity $DESIRED_CAPACITY
+          else
+            echo "ASG ${{ env.asg_name_2 }} not found"
+          fi
