@@ -95,7 +95,7 @@ jobs:
       - name: Get Private Key from Secrets Manager
         id: ssh_key
         run: |
-          aws secretsmanager get-secret-value --secret-id test-ssh --query SecretString --output text > ssh_key.pem
+          aws secretsmanager get-secret-value --secret-id ssh-test --query SecretString --output text > ssh_key.pem
           chmod 600 ssh_key.pem
 
       - name: Check user_data execution
