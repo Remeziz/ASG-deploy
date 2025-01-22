@@ -38,7 +38,9 @@ jobs:
       - name: Get Terraform Output
         id: get-output
         run: |
-          asg_names=$(terraform output -json asg_names | jq -r '. | join(" ")')
+          raw_asg_names=$(terraform output -json asg_names)
+          echo "Raw ASG Names: $raw_asg_names"
+          asg_names=$(echo $raw_asg_names | jq -r '. | join(" ")')
           echo "asg_names=$asg_names" >> $GITHUB_ENV
 
       - name: Process ASG Names
