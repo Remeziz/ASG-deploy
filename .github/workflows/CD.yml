@@ -111,7 +111,7 @@ jobs:
             exit 1
           fi
           for i in {1..5}; do
-            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'sudo grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
             if [ $? -eq 0 ]; then
               echo "user_data executed successfully on instance $INSTANCE_ID"
               exit 0
