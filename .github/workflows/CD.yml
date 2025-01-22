@@ -74,9 +74,6 @@ jobs:
             exit 1
           fi
 
-      - name: Wait for ASG1 to stabilize
-        run: sleep 10
-
       - name: Check instance availability
         run: |
           asg_name="${{ env.asg_name_1 }}"
