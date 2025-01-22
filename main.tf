@@ -2,6 +2,16 @@ provider "aws" {
   region = "us-west-2"
 }
 
+terraform {
+  backend "s3" {
+    bucket         = "hillel-devops-terraform-state-2"
+    key            = "asg/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "terraform_lock"
+    encrypt        = true
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -65,7 +75,6 @@ resource "aws_security_group" "asg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
 
 resource "aws_launch_template" "asg" {
   name          = "example-launch-template"
