@@ -75,7 +75,7 @@ jobs:
           fi
 
       - name: Wait for ASG1 to stabilize
-        run: sleep 20
+        run: sleep 30
 
       - name: Check instance availability
         run: |
@@ -96,7 +96,7 @@ jobs:
         id: ssh_key
         run: |
           aws secretsmanager get-secret-value --secret-id ssh-test --query SecretString --output text > ssh_key.pem
-          chmod 400 ssh_key.pem
+          chmod 600 ssh_key.pem
 
       - name: Get Instance ID and IP
         id: instance_info
