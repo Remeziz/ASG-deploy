@@ -41,6 +41,8 @@ jobs:
           asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[]' | tr -d '\r')
           asg_name_1=$(echo "$asg_names" | sed -n '1p')
           asg_name_2=$(echo "$asg_names" | sed -n '2p')
+          echo "asg_name_1=$asg_name_1"
+          echo "asg_name_2=$asg_name_2"
           if [ -z "$asg_name_1" ] || [ -z "$asg_name_2" ]; then
             echo "Error: One or both ASG names are empty"
             exit 1
@@ -73,6 +75,7 @@ jobs:
         run: |
           DESIRED_CAPACITY=1
           asg_name="${{ env.asg_name_1 }}"
+          echo "Updating ASG: $asg_name"
           if [ -z "$asg_name" ]; then
             echo "Error: ASG name is empty"
             exit 1
@@ -103,6 +106,7 @@ jobs:
         run: |
           DESIRED_CAPACITY=1
           asg_name="${{ env.asg_name_2 }}"
+          echo "Updating ASG: $asg_name"
           if [ -z "$asg_name" ]; then
             echo "Error: ASG name is empty"
             exit 1
