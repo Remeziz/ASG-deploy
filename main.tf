@@ -170,3 +170,4 @@ resource "aws_autoscaling_attachment" "asg_attachment2" {
   autoscaling_group_name = aws_autoscaling_group.asg2.name
   elb                    = aws_elb.main2.name
 }
+

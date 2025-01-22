@@ -10,6 +10,35 @@ on:
     branches: ["main"]
 
 jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Apply Terraform
+        run: terraform apply -auto-approve
+
+      - name: Get Terraform Output
+        id: get-output
+        run: echo "asg_names=$(terraform output -json asg_names)" >> $GITHUB_ENV
+
+      - name: Process ASG Names
+        run: |
+          echo "ASG Names: ${{ env.asg_names }}"
+          echo "${{ env.asg_names }}" | jq -c '.[]' | while read -r asg_name; do
+            echo "Processing ASG: $asg_name"
+          done
+        
   update-asg:
     runs-on: ubuntu-latest
     environment: prod
@@ -26,22 +55,12 @@ jobs:
 
       - name: Update ASG desired capacity
         run: |
-          ASG_NAME="terraform-20250121185357556700000002"
-          DESIRED_CAPACITY=0
-          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names $ASG_NAME --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
-          if [ "$ASG_EXISTS" == "$ASG_NAME" ]; then
-            aws autoscaling update-auto-scaling-group --auto-scaling-group-name $ASG_NAME --desired-capacity $DESIRED_CAPACITY
-          else
-            echo "ASG $ASG_NAME not found"
-          fi
-
-      - name: Update ASG2 desired capacity
-        run: |
-          ASG_NAME="terraform-20250121190400418200000002"
-          DESIRED_CAPACITY=0
-          ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names $ASG_NAME --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
-          if [ "$ASG_EXISTS" == "$ASG_NAME" ]; then
-            aws autoscaling update-auto-scaling-group --auto-scaling-group-name $ASG_NAME --desired-capacity $DESIRED_CAPACITY
-          else
-            echo "ASG $ASG_NAME not found"
-          fi
+          echo "${{ env.asg_names }}" | jq -c '.[]' | while read -r asg_name; do
+            DESIRED_CAPACITY=1
+            ASG_EXISTS=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].AutoScalingGroupName' --output text)
+            if [ "$ASG_EXISTS" == "$asg_name" ]; then
+              aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --desired-capacity $DESIRED_CAPACITY
+            else
+              echo "ASG $asg_name not found"
+            fi
+          done
