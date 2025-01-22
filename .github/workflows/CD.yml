@@ -77,12 +77,17 @@ jobs:
       - name: Check instance availability
         run: |
           asg_name="${{ env.asg_name_1 }}"
-          INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
-          if [ "$INSTANCE_ID" == "None" ]; then
-            echo "Error: No instance found in ASG $asg_name"
-            exit 1
-          fi
-          echo "Instance $INSTANCE_ID is available in ASG $asg_name"
+          for i in {1..5}; do
+            INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$asg_name" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
+            if [ "$INSTANCE_ID" != "None" ]; then
+              echo "Instance $INSTANCE_ID is available in ASG $asg_name"
+              exit 0
+            fi
+            echo "Instance not found, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "Error: No instance found in ASG $asg_name after multiple attempts"
+          exit 1
 
       - name: Check user_data execution
         run: |
