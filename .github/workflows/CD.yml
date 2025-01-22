@@ -42,7 +42,8 @@ jobs:
          sg_name_2=$(terraform output -raw asg_name_2 | sed 's/::.*$//' | tr -d '\r')
          echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
          echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
-
+        shell: bash
+        
       - name: Process ASG Names
         run: |
           echo "ASG Name 1: ${{ env.asg_name_1 }}"
