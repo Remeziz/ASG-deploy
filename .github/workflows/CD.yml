@@ -13,9 +13,6 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: prod
-    outputs:
-      asg_name_1: ${{ steps.get-asg-names.env.asg_name_1 }}
-      asg_name_2: ${{ steps.get-asg-names.env.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -63,9 +60,6 @@ jobs:
     needs: terraform
     runs-on: ubuntu-latest
     environment: prod
-    env:
-      asg_name_1: ${{ needs.terraform.outputs.asg_name_1 }}
-      asg_name_2: ${{ needs.terraform.outputs.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -80,7 +74,7 @@ jobs:
       - name: Update ASG desired capacity
         run: |
           DESIRED_CAPACITY=1
-          for asg_name in "${{ env.asg_name_1 }}" "${{ env.asg_name_2 }}"; do
+          for asg_name in "${{ asg_name_1 }}" "${{ asg_name_2 }}"; do
             echo "Updating ASG: $asg_name"
             if [ -z "$asg_name" ]; then
               echo "Error: ASG name is empty"
