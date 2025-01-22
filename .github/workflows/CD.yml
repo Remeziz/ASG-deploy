@@ -33,6 +33,7 @@ jobs:
         run: terraform init
 
       - name: Apply Terraform
+        id: apply
         run: terraform apply -auto-approve
 
       - name: Get ASG Names
@@ -95,7 +96,9 @@ jobs:
             echo "Error: No private IP found for instance $INSTANCE_ID"
             exit 1
           fi
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
+          echo "${{ steps.apply.outputs.ssh_private_key }}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
           if [ $? -ne 0 ]; then
             echo "Error: user_data did not execute successfully on instance $INSTANCE_ID"
             exit 1
