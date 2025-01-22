@@ -35,13 +35,10 @@ jobs:
       - name: Apply Terraform
         run: terraform apply -auto-approve
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
       - name: Get ASG Names
         id: get-asg-names
         run: |
-          asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[]' | tr -d '\r')
+          asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' --output json | jq -r '.[] | @sh' | tr -d '\r')
           echo "asg_names=${asg_names}" >> $GITHUB_ENV
         shell: bash
         
