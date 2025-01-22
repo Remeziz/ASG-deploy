@@ -38,7 +38,7 @@ jobs:
       - name: Get ASG Names
         id: get-asg-names
         run: |
-          asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' | jq -r '.[] | @sh' | tr -d '\r')
+          asg_names=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[*].AutoScalingGroupName' | jq -r '.[] | tr -d '\r')
           echo "asg_names=$asg_names" >> $GITHUB_ENV
         shell: bash
         
