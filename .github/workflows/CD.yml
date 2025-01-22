@@ -13,6 +13,9 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     environment: prod
+    outputs:
+      asg_name_1: ${{ steps.get-asg-names.outputs.asg_name_1 }}
+      asg_name_2: ${{ steps.get-asg-names.outputs.asg_name_2 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -49,6 +52,8 @@ jobs:
           fi
           echo "asg_name_1=$asg_name_1" >> $GITHUB_ENV
           echo "asg_name_2=$asg_name_2" >> $GITHUB_ENV
+          echo "::set-output name=asg_name_1::$asg_name_1"
+          echo "::set-output name=asg_name_2::$asg_name_2"
         shell: bash
         
       - name: Process ASG Names
