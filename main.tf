@@ -29,6 +29,7 @@ resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
+  map_public_ip_on_launch = true
 }
 
 resource "aws_internet_gateway" "main" {
@@ -95,6 +96,10 @@ resource "aws_launch_template" "asg" {
                   echo "Hello, World!" > /var/log/user_data.log
                   EOF
                   )
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.asg.id]
+  }
 }
 
 resource "aws_launch_template" "asg2" {
@@ -107,6 +112,10 @@ resource "aws_launch_template" "asg2" {
                   echo "Hello, World!" > /var/log/user_data.log
                   EOF
                   )
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.asg.id]
+  }
 }
 
 resource "aws_autoscaling_group" "asg" {
