@@ -80,20 +80,22 @@ resource "aws_launch_template" "asg" {
   name          = "example-launch-template"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
-  user_data     = <<-EOF
+  user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log
                   EOF
+                  )
 }
 
 resource "aws_launch_template" "asg2" {
   name          = "example-launch-template-2"
   image_id      = "ami-063d405eaa926874b"
   instance_type = "t4g.micro"
-  user_data     = <<-EOF
+  user_data     = base64encode(<<-EOF
                   #!/bin/bash
                   echo "Hello, World!" > /var/log/user_data.log
                   EOF
+                  )
 }
 
 resource "aws_autoscaling_group" "asg" {
