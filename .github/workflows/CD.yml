@@ -86,7 +86,15 @@ jobs:
       - name: Check user_data execution
         run: |
           INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "${{ env.asg_name_1 }}" --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
+          if [ "$INSTANCE_ID" == "None" ]; then
+            echo "Error: No instance found in ASG $asg_name"
+            exit 1
+          fi
           INSTANCE_IP=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          if [ "$INSTANCE_IP" == "None" ]; then
+            echo "Error: No public IP found for instance $INSTANCE_ID"
+            exit 1
+          fi
           ssh -o StrictHostKeyChecking=no ec2-user@$INSTANCE_IP 'grep "Cloud-init .* finished" /var/log/cloud-init-output.log'
           if [ $? -ne 0 ]; then
             echo "Error: user_data did not execute successfully on instance $INSTANCE_ID"
